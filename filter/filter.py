@@ -1,3 +1,6 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
 import numpy as np
 import cv2
 import matplotlib.pyplot as plt
@@ -58,7 +61,6 @@ def hex2image(hex):
    
     return  img_out
 
-
 def gaussian_kernel(size=3,sigma=1,k=1):
     '''
     根据提供的参数生成高斯模板,大小为 mask*mask
@@ -72,7 +74,6 @@ def gaussian_kernel(size=3,sigma=1,k=1):
     y0 = 0
     gauss = 1/(2*np.pi*sigma**2) * np.exp(- ((x -x0)**2 + (y - y0)**2)/ (2 * sigma**2))
     return gauss
-
 
 def gaussian_kernel_normal(size=3,sigma=1,k=1):
     '''
@@ -121,11 +122,33 @@ def bilateral_filter(size=3,sigma_color=1,sigma_space=1,k=1):
     gaussian = gaussian_kernel_normal(5,1,1)
     color = color_level(6,30)
 
+def read_isp_file(file_name,write_file):
+    '''
+    读取isp的地址文件
+    param: file 输入的文件
+    '''
+    file_in = open(file_name,'r')
+    lines = file_in.readlines()
+    write_file.write("//"+file_name+ "\n")
+    for line in lines:
+        if(len(line) > 100):
+            element = line.split(',')
+            write_file.write(element[5]+' : '+element[2]+"\n")
+            print(element[5]+' : '+element[2]+'\n')
+    write_file.write("\n\n")
+    
+def img_resize(img_name):
+    img = cv2.imread(img_name,0)
+    cv2.imshow("origin_img",img)
+    shrink_img1 = cv2.resize(img,None,fx=2,fy=2,interpolation=cv2.INTER_NEAREST)
+    shrink_img2 = cv2.resize(img,None,fx=2,fy=2,interpolation=cv2.INTER_LINEAR)
+    shrink_img3 = cv2.resize(img,None,fx=2,fy=2,interpolation=cv2.INTER_AREA)
+    shrink_img4 = cv2.resize(img,None,fx=2,fy=2,interpolation=cv2.INTER_CUBIC)
+    cv2.imshow("shrink_img1",shrink_img1)
+    cv2.imshow("shrink_img2",shrink_img2)
+    cv2.imshow("shrink_img3",shrink_img3)
+    cv2.imshow("shrink_img4",shrink_img4)
 
-g = np.arange(-10,10,0.1)
-sigma = 3
-gauss = 1/((2*np.pi)**0.5 *sigma**2) * np.exp(-g**2)/ (2 * sigma**2)
-plt.plot(g,gauss,label='gaussian')
-plt.legend()
-plt.xlim(-3,3)
-plt.show()
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
+
