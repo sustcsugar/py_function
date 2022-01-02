@@ -6,6 +6,7 @@ import cv2
 import matplotlib.pyplot as plt
 import struct
 
+__version__ = '0.1'
 
 def random_noise(image, noise_number):
     '''
@@ -32,10 +33,12 @@ def img2hex(image,hex_out):
     outfile = open(hex_out,"w")
     img = cv2.imread(image,1)
     img_gray = cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
-    for i in range(480):
+    sp = img_gray.shape
+
+    for i in range(sp[0]):
         print(i)
-        for j in range(720):
-            outfile.write(str('0x{:02X}'.format(img_gray[i,j]))+'\n')
+        for j in range(sp[1]):
+            outfile.write(str('{:02X}'.format(img_gray[i,j]))+'\n')
             #print("pixel out:["+i+" , "+j+"]\n")
     outfile.close()
 
@@ -58,75 +61,12 @@ def hex2image(hex,width,height):
             data1 = str(00)
         data_set.append(data1)
     
-    for row in range(height): #hex文件中, 末尾几行可能是xx或者空值, 无法转换为十进制数字, 简单起见直接将其省略.
+    for row in range(height):
         for col in range(width):
             if row*width+col < len(data_set):
                 img_out[row,col] = int(data_set[row*width+col],base=16)
 
-   
     return  img_out 
- 
-
-def gaussian_kernel(size=3,sigma=1,k=1):
-    '''
-    根据提供的参数生成高斯模板,大小为 mask*mask
-    '''
-    if sigma==0:
-        sigma = ((size-1) * 0.5 -1)*0.3 + 0.8  # ??
-    X = np.linspace(-k,k,size)
-    Y = np.linspace(-k,k,size)
-    x,y = np.meshgrid(X,Y)
-    x0 = 0
-    y0 = 0
-    gauss = 1/(2*np.pi*sigma**2) * np.exp(- ((x -x0)**2 + (y - y0)**2)/ (2 * sigma**2))
-    return gauss
-
-def gaussian_kernel_normal(size=3,sigma=1,k=1):
-    '''
-    根据提供的参数生成归一化的高斯模板
-    param: size 高斯核的大小
-    param: sigma 方差
-    param: k 高斯核的边界
-    '''
-    if sigma==0:
-        sigma = ((size-1) * 0.5 -1)*0.3 + 0.8  # ??
-    X = np.linspace(-k,k,size)
-    Y = np.linspace(-k,k,size)
-    x,y = np.meshgrid(X,Y)
-    x0 = 0
-    y0 = 0
-    gauss = 1/(2*np.pi*sigma**2) * np.exp(- ((x -x0)**2 + (y - y0)**2)/ (2 * sigma**2))
-    sum = 0
-    for i in gauss:
-        for j in i:
-            sum = sum +j
-    normal = gauss/sum
-
-    return normal
-
-def color_level(level=6,sigma_color=1):
-    value = int(256/level)
-    vector = np.zeros(level)
-    for i in range(level):
-        vector[i]=(i+1)*value
-    color = np.exp( -( (vector**2)/(2*sigma_color**2) ) )
-    #sum=0
-    #for i in color:
-    #    sum = sum + i
-    #color = color/sum
-
-    return color
-
-def bilateral_filter(size=3,sigma_color=1,sigma_space=1,k=1):
-    '''
-    根据提供的参数生成归一化的双边模板
-    param: size 核的大小
-    param: sigma_color 色域方差
-    param: sigma_space 空域方差
-    param: k 核边界
-    '''
-    gaussian = gaussian_kernel_normal(5,1,1)
-    color = color_level(6,30)
 
 def read_isp_file(file_name,write_file):
     '''
@@ -142,7 +82,8 @@ def read_isp_file(file_name,write_file):
             write_file.write(element[5]+' : '+element[2]+"\n")
             print(element[5]+' : '+element[2]+'\n')
     write_file.write("\n\n")
-    
+  
+ 
 def img_resize(img_name):
     img = cv2.imread(img_name,0)
     cv2.imshow("origin_img",img)
@@ -182,52 +123,7 @@ def read_decoder_hexfile(file_name):
             img_out[i,j,1] = g;
             img_out[i,j,2] = r;
 
-hex_file = "out.hex"
-img_out = hex2image(hex_file,1280,720);
-
-
-img_out_debayer = np.zeros((height,width,3),np.uint8)  # RGB 0-2
-for i in range(720):
-    for j in range(1280):
-        if i%2==0 & j%2==0:
-            if i==0 | j==0 | i==719 | j==1279:
-                img_out_debayer[i,j,0] = img_out[i,j+1]
-                img_out_debayer[i,j,1] = img_out[i,j]
-                img_out_debayer[i,j,2] = img_out[i+1,j]
-            else:
-                img_out_debayer[i,j,0] = (img_out[i,j-1] + img_out[i,j+1]) / 2
-                img_out_debayer[i,j,1] = img_out[i,j]
-                img_out_debayer[i,j,2] = (img_out[i-1.j] + img_out[i+1,j])/2
-        elif i%2==0 & j%2==1:
-            if i==0 | j==0 | i==719 | j==1279:
-                img_out_debayer[i,j,0] = img_out[i,j]
-                img_out_debayer[i,j,1] = img_out[i,j-1]
-                img_out_debayer[i,j,2] = img_out[i+1,j]
-            else:
-                img_out_debayer[i,j,0] = (img_out[i,j-1] + img_out[i,j+1]) / 2
-                img_out_debayer[i,j,1] = img_out[i,j]
-                img_out_debayer[i,j,2] = (img_out[i-1.j] + img_out[i+1,j])/2
 
 
 
-cv2.imshow("test",img_out)
-cv2.waitKey(0)
-cv2.destroyAllWindows()
 
-
-
-outfile = open("img_out_hex","w")
-for i in range(720):
-     print(i)
-     for j in range(1280):
-         outfile.write(str('{:02X}'.format(int(img_out[i,j])))+'\n')
-         #print("pixel out:["+i+" , "+j+"]\n")
-outfile.close()
-
-
-
-#hex = open(hex_file,"r")
-#data = hex.readlines()
-#data_set = []
-#
-#print(data[0][3:5])
