@@ -1,11 +1,12 @@
-
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 
 def gaussian_kernel(size=3,sigma=1,k=1):
     '''
     根据提供的参数生成高斯模板,大小为 mask*mask
     '''
     if sigma==0:
-        sigma = ((size-1) * 0.5 -1)*0.3 + 0.8  # ??
+        sigma = ((size-1) * 0.5 -1)*0.3 + 0.8
     X = np.linspace(-k,k,size)
     Y = np.linspace(-k,k,size)
     x,y = np.meshgrid(X,Y)

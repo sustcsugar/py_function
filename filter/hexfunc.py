@@ -54,19 +54,27 @@ def hex2image(hex,width,height):
    
     data_set = []
     for data in img_hex:
-        #data1 = data.strip('\n')
-        #data2 = data1.split('\t')
-        data1 = data[3:5]
-        if data1 == 'xx':
-            data1 = str(00)
-        data_set.append(data1)
+        data = data.strip('\n')
+
+        if data[0:2] == '0x': #如果数据格式为0xff,则取0x之后的数据
+            data1 = data[2:]
+        else:                  #如果数据格式为ff，则取全部的数值
+            data1 = data[:]
+
+        #if data1 == 'xx':
+        #    data1 = str(00)
+        data_clean = data1.replace('x','0')
+
+        data_set.append(data_clean)  #将数据放到数组里面
     
-    for row in range(height):
+    for row in range(height):   #将数组按照图片的长宽，进行逐行排布
         for col in range(width):
             if row*width+col < len(data_set):
                 img_out[row,col] = int(data_set[row*width+col],base=16)
 
-    return  img_out 
+    return  img_out
+
+
 
 def read_isp_file(file_name,write_file):
     '''
